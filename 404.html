@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>404 Not Found</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+    body { background: #000; }
+    .cover { height: 100%; width: 100%; display: block; overflow: hidden; }
+    #main { background: #757575; position: fixed; }
+    #main div { position: absolute; float: left; border: 0px solid #fff; display: block; }
+    #ball { overflow: hidden; }
+    #name_input { background: #000; color: #fff; border: 0 none; cursor: pointer; margin: 0; text-align: center; font-family: sans-serif; }
+  </style>
+  <script>
+    var TITLE = '404';
+    var addDiv = function (parent, id, className) {
+      var d = document.createElement('div');
+      d.id = id; if (className) d.className = className;
+      return parent.appendChild(d);
+    };
+    var validNum = function (number) {
+      if (typeof number !== 'number') return null;
+      if (isNaN(number)) return null;
+      return number;
+    };
+    var setSize = function (obj, width, height) {
+      if (validNum(width) !== null) obj.style.width = width + 'px';
+      if (validNum(height) !== null) obj.style.height = height + 'px';
+      return obj;
+    };
+    var setPos = function (obj, left, top) {
+      if (validNum(left) !== null) obj.style.left = left + 'px';
+      if (validNum(top) !== null) obj.style.top = top + 'px';
+      return obj;
+    };
+    var setColor = function (obj, color) {
+      obj.style.backgroundColor = color;
+      return obj;
+    };
+    var watch = function () {
+      var callbacks = [];
+      var cellSize = null;
+      var lineWidth = null;
+      var bodySize = null;
+      var flushItem = function (callback) {
+        if (validNum(cellSize) === null) return;
+        callback(cellSize, lineWidth);
+      }
+      var flush = function (n) {
+        flushItem(callbacks[n]);
+      };
+      var flushAll = function () {
+        callbacks.forEach(flushItem);
+      }
+      var calcCellSize = function () {
+        var cell = Math.min(bodySize.width / 17, bodySize.height / 13);
+        return cell;
+      };
+      var setCellSize = function (newCellSize) {
+        cellSize = newCellSize;
+        lineWidth = Math.max(cellSize / 12, 2);
+      }
+      var setBodySize = function () {
+        var b = document.body;
+        var width = b.clientWidth, height = b.clientHeight;
+        bodySize = { 'width': width, 'height': height };
+      }
+      var resetPos = function () {
+        setBodySize();
+        setCellSize(calcCellSize());
+        flushAll();
+      };
+      resetPos();
+      window.addEventListener('resize', resetPos);
+      return function (callback) {
+        var n = callbacks.length;
+        callbacks[n] = callback;
+        flush(n);
+      };
+    };
+    var bodyInit = function (callback) {
+      watch = watch();
+      callback();
+    };
+    var mainOuter = function () {
+      var main = addDiv(document.body, 'main');
+      watch(function (cellSize) {
+        var b = document.body;
+        var w = cellSize * 17, h = cellSize * 13;
+        var x = (b.clientWidth - w) >> 1, y = (b.clientHeight - h) >> 1;
+        setSize(main, w, h);
+        setPos(main, x, y);
+      });
+      return main;
+    };
+    var addBox = function (div, x, y, w, h) {
+      watch(function (cellSize) {
+        setPos(div, cellSize * x, cellSize * y);
+        setSize(div, cellSize * w, cellSize * h);
+      });
+      return div;
+    };
+    var addLine = function (line, x, y, w, h) {
+      if (w && h) return null;
+      watch(function (cellSize, lineWidth) {
+        var px = cellSize * x - (w ? 0 : (lineWidth >> 1));
+        var py = cellSize * y - (h ? 0 : (lineWidth >> 1));
+        var aw = Math.max(w * cellSize - lineWidth, 0)
+        var ah = Math.max(h * cellSize - lineWidth, 0)
+        setPos(line, px, py);
+        setSize(line, aw, ah);
+        line.style.borderWidth = (lineWidth >> 1) + 'px';
+      });
+      return line;
+    };
+    var gridLines = function (main) {
+      var lines = function (pos, className, num) {
+        var i, line, lines = [];
+        for (i = 0; i < num; i++) {
+          line = document.createElement('div');
+          line.classList.add(className);
+          pos.appendChild(line);
+          lines[lines.length] = line;
+        }
+        return lines;
+      };
+      var setVerticalLine = function (line, num) { addLine(line, num, 0, 0, 13); };
+      var setHorizontalLine = function (line, num) { addLine(line, 0, num, 17, 0); };
+      lines(addDiv(main, 'vertical_lines', 'cover'),
+        'vertical', 17 + 1).forEach(setVerticalLine);
+      lines(addDiv(main, 'horizontal_lines', 'cover'),
+        'horizontal', 13 + 1).forEach(setHorizontalLine);
+    };
+    var sideBar = function (main) {
+      setColor(addBox(addDiv(main, 'left_side_1'), 1, 1, 1, 5.5), '#19c687');
+      setColor(addBox(addDiv(main, 'left_side_2'), 1, 6.5, 1, 5.5), '#be1d53');
+      setColor(addBox(addDiv(main, 'left_side_3'), 2, 1, 1, 2), '#5484ff');
+      setColor(addBox(addDiv(main, 'left_side_4'), 2, 10, 1, 2), '#bf5106');
+      setColor(addBox(addDiv(main, 'left_side_1'), 17 - 2, 1, 1, 5.5), '#548a28');
+      setColor(addBox(addDiv(main, 'left_side_2'), 17 - 2, 6.5, 1, 5.5), '#5347ff');
+      setColor(addBox(addDiv(main, 'left_side_3'), 17 - 3, 1, 1, 2), '#5484ff');
+      setColor(addBox(addDiv(main, 'left_side_4'), 17 - 3, 10, 1, 2), '#bf5106');
+    };
+    var bigBall = function (main) {
+      var ball = setColor(addBox(addDiv(main, 'ball'), 2.5, 0.5, 12, 12), '#fff');
+      watch(function (cellSize) {
+        ball.style.borderRadius = (6 * cellSize) + 'px';
+      });
+      return ball;
+    };
+    var ballLine1 = function (ball) {
+      var nameArea = setColor(addBox(addDiv(ball, 'name'), 4, 0.5, 4, 1), '#000');
+      var nameInput = document.createElement('input');
+      nameInput.id = 'name_input';
+      nameInput.value = TITLE;
+      nameInput.readOnly = true;
+      nameArea.appendChild(nameInput);
+      watch(function (cellSize) {
+        var padding = cellSize * 0.1;
+        nameInput.style.padding = padding + 'px';
+        nameInput.style.fontSize = (cellSize - padding * 4) + 'px';
+        nameInput.style.lineHeight = (cellSize - padding * 4) + 'px';
+        setSize(nameInput, cellSize * 4 - padding * 2, cellSize - padding * 2);
+      });
+    };
+    var ballLine2 = function (ball) {
+      setColor(addBox(addDiv(ball, 'ball2l'), 0, 1.5, 3, 1), '#000');
+      setColor(addBox(addDiv(ball, 'ball2r'), 9, 1.5, 3, 1), '#000');
+    };
+    var ballLine3 = function (ball) {
+      var w = Math.sqrt(Math.pow(6, 2) - Math.pow(6 - 2.5, 2)) / 7;
+      var r = 6 - w * 8;
+      var i;
+      for (i = 0; i < 16; i++)
+        setColor(addBox(addDiv(ball, 'ball3_' + i),
+          r + i * w, 2.5, w, 1), (i & 1) ? '#000' : '#adadad');
+    };
+    var ballLine4 = function (ball) {
+      var w = Math.sqrt(Math.pow(6, 2) - Math.pow(6 - 5.5, 2)) / 3;
+      var r = 6 - w * 3;
+      var colors = ['#ff0', '#0ff', '#3f0', '#f0f', '#f00', '#00f'];
+      var i;
+      for (i = 0; i < 6; i++)
+        setColor(addBox(addDiv(ball, 'ball4_' + i),
+          r + i * w, 3.5, w, 2), colors[i]);
+    };
+    var ballLine6 = function (ball) {
+      setColor(addBox(addDiv(ball, 'ball6'), 0, 5.5, 12, 1), '#000');
+    }
+    var ballLine7 = function (ball) {
+      var w = Math.sqrt(Math.pow(6, 2) - Math.pow(6 - 5.5, 2)) / 3;
+      var r = 6 - w * 3.5;
+      var i, j, d, n;
+      for (i = 0; i < 7; i++) {
+        d = setColor(addBox(addDiv(ball, 'ball7_' + i),
+          r + i * w, 6.5, w, 2), '#fff');
+        n = (10 * i);
+        if (i === 0 || i === 6) setColor(d, '#000');
+        else for (j = 0; j < n; j++) {
+          setColor(addBox(addDiv(d, 'ball7_' + i + '_' + j),
+            w / n * j, 0, w / n, 2), (j & 1) ? '#fff' : '#000');
+        }
+      }
+    };
+    var ballLine9 = function (ball) {
+      var w = Math.sqrt(Math.pow(6, 2) - Math.pow(6 - 5.5, 2)) / 3;
+      var r = 6 - w * 3;
+      var colors = ['#000', '#333', '#666', '#999', '#ccc', '#fff'];
+      colors.forEach(function (color, i) {
+        setColor(addBox(addDiv(ball, 'ball9_' + i),
+          r + i * w, 8.5, w, 1), color);
+      })
+    }
+    var ballLineA = function (ball) {
+      var w = Math.sqrt(Math.pow(6, 2) - Math.pow(6 - 5.5, 2)) / 3;
+      var r = 6 - w * 1.5;
+      setColor(addBox(addDiv(ball, 'ballA'), r, 9.5, w * 3, 1), '#000');
+    }
+    var ballLineB = function (ball) {
+      var w = Math.sqrt(Math.pow(6, 2) - Math.pow(6 - 1.5, 2));
+      var r = 6 - w;
+      setColor(addBox(addDiv(ball, 'ballB_y'), r, 10.5, w * 2, 1.5), '#ff0');
+      setColor(addBox(addDiv(ball, 'ballB_r'), 5.5, 10.5, 1, 1.5), '#f00');
+    }
+    var ballLine6B = function (ball) {
+      setColor(addBox(addDiv(ball, 'ball6B_b'), 5.5, 4.5, 1, 3), '#000');
+      var i;
+      for (i = 0; i < 12; i++) {
+        setColor(addLine(addDiv(ball, 'ball6B_' + i), i + 0.5, 5.5, 0, 1), '#000');
+      }
+      setColor(addLine(addDiv(ball, 'ball6B_m'), 6, 4.5, 0, 3), '#000');
+      setColor(addLine(addDiv(ball, 'ball6B_h'), 0, 6, 12, 0), '#000');
+    }
+    window.addEventListener('load', function () {
+      bodyInit(function () {
+        var main = mainOuter();
+        gridLines(main);
+        sideBar(main);
+        var ball = bigBall(main);
+        [ballLine1, ballLine2, ballLine3, ballLine4, ballLine6,
+          ballLine7, ballLine9, ballLineA, ballLineB, ballLine6B]
+          .forEach(function (f) { f(ball); });
+      });
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
